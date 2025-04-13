@@ -90,17 +90,17 @@ export async function POST(request: Request) {
       }
     }
 
-    // Create user and technician in a transaction
-    const result = await prisma.$transaction(async (prisma) => {
-      // Create user
-      const user = await prisma.user.create({
-        data: userData,
-      });
+    // Create user and related records based on role
+    if (role === 'TECHNICIAN') {
+      // Use transaction with transaction function pattern
+      const result = await prisma.$transaction(async (tx) => {
+        // Create user
+        const user = await tx.user.create({
+          data: userData,
+        });
 
-      // If user is a technician, create technician and service records
-      if (role === 'TECHNICIAN') {
         // Create technician
-        const technician = await prisma.technician.create({
+        const technician = await tx.technician.create({
           data: {
             name: `${firstName} ${lastName}`,
             email,
@@ -115,36 +115,43 @@ export async function POST(request: Request) {
             certifications: [licenseNumber],
             availability: JSON.parse(availability),
             workingHours: { start: "09:00", end: "17:00" },
-            user: {
-              connect: { id: user.id }
-            }
+            userId: user.id  // Direct assignment instead of connect
           },
         });
 
         // Create service
-        await prisma.service.create({
+        const service = await tx.service.create({
           data: {
             name: serviceType,
             description,
             price: parseFloat(hourlyRate),
             duration: 60, // Default duration in minutes
             category: serviceType,
-            technician: {
-              connect: { id: technician.id }
-            }
+            technicianId: technician.id  // Direct assignment instead of connect
           },
         });
 
-        return { user, technician };
-      }
+        return { user, technician, service };
+      }, {
+        maxWait: 5000, // Maximum time to wait for transaction to start
+        timeout: 10000  // Maximum time for transaction to complete
+      });
 
-      return { user };
-    });
+      return NextResponse.json(
+        { message: 'Technician registered successfully', userId: result.user.id },
+        { status: 201 }
+      );
+    } else {
+      // For regular customers, just create the user without a transaction
+      const user = await prisma.user.create({
+        data: userData,
+      });
 
-    return NextResponse.json(
-      { message: 'User registered successfully', userId: result.user.id },
-      { status: 201 }
-    );
+      return NextResponse.json(
+        { message: 'User registered successfully', userId: user.id },
+        { status: 201 }
+      );
+    }
   } catch (error) {
     console.error('Registration error:', error);
     return NextResponse.json(
@@ -152,4 +159,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-} 
+}

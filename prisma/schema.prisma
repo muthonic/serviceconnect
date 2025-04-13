@@ -12,12 +12,12 @@ model User {
   id            String         @id @default(cuid())
   name          String?
   email         String         @unique
-  image         String?
   password      String?
   phone         String?
   role          UserRole       @default(CUSTOMER)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  image         String?
   accounts      Account[]
   bookings      Booking[]
   notifications Notification[]
@@ -31,12 +31,12 @@ model Service {
   id           String     @id @default(cuid())
   name         String
   description  String
-  price        Float
-  duration     Int
   category     String
+  duration     Int
   technicianId String
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+  price        Float
   bookings     Booking[]
   images       Image[]
   reviews      Review[]   @relation("ServiceReviews")
@@ -46,16 +46,16 @@ model Service {
 
 model Booking {
   id           String        @id @default(cuid())
+  serviceId    String
+  customerId   String
   date         DateTime
   startTime    String
   endTime      String
   status       BookingStatus @default(PENDING)
-  amount       Float
-  technicianId String
-  serviceId    String
-  customerId   String
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  amount       Float
+  technicianId String
   customer     User          @relation(fields: [customerId], references: [id])
   service      Service       @relation(fields: [serviceId], references: [id])
   technician   Technician    @relation(fields: [technicianId], references: [id], onDelete: Cascade)
@@ -77,14 +77,14 @@ model Payment {
 
 model Review {
   id           String     @id @default(cuid())
+  serviceId    String
+  bookingId    String     @unique
   rating       Int
   comment      String
-  bookingId    String     @unique
-  technicianId String
-  userId       String
-  serviceId    String
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+  technicianId String
+  userId       String
   booking      Booking    @relation(fields: [bookingId], references: [id])
   service      Service    @relation("ServiceReviews", fields: [serviceId], references: [id])
   technician   Technician @relation(fields: [technicianId], references: [id], onDelete: Cascade)
