@@ -226,7 +226,7 @@ export default function TechnicianProfile() {
                       {service.description}
                     </p>
                     <p className="text-blue-600 font-medium mt-2">
-                      From ${service.price}
+                      From Ksh{service.price}
                     </p>
                   </div>
                 ))

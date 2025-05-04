@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { FaCalendarAlt, FaStar, FaTools, FaDollarSign, FaClock, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
+import { FaCalendarAlt, FaStar, FaTools, FaClock, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 
@@ -134,11 +134,11 @@ export default function TechnicianDashboard() {
         <div className="bg-white shadow rounded-lg p-6">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-indigo-100 text-indigo-600">
-              <FaDollarSign className="h-6 w-6" />
+              <span className="h-6 w-6 font-bold flex items-center justify-center">Ksh</span>
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Earnings</p>
-              <p className="text-lg font-semibold text-gray-900">${stats.totalEarnings.toFixed(2)}</p>
+              <p className="text-lg font-semibold text-gray-900">Ksh{stats.totalEarnings.toFixed(2)}</p>
             </div>
           </div>
         </div>

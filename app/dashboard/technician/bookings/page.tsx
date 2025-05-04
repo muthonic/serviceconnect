@@ -146,7 +146,7 @@ export default function TechnicianBookings() {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center text-sm text-gray-900">
-                    <FaDollarSign className="mr-1" />
+                    <span className="mr-1">Ksh</span>
                     {booking.amount}
                   </div>
                 </td>
@@ -245,7 +245,7 @@ export default function TechnicianBookings() {
                     <span>{selectedBooking.startTime} - {selectedBooking.endTime}</span>
                   </div>
                   <div className="flex items-center text-gray-600">
-                    <FaDollarSign className="mr-2" />
+                    <span className="mr-2">Ksh</span>
                     <span>{selectedBooking.amount}</span>
                   </div>
                 </div>

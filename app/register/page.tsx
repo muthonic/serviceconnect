@@ -375,7 +375,7 @@ export default function Register() {
 
                 <div>
                   <label htmlFor="hourlyRate" className="block text-sm font-medium text-gray-700">
-                    Hourly Rate ($)
+                    Hourly Rate (Ksh)
                   </label>
                   <div className="mt-1">
                     <input

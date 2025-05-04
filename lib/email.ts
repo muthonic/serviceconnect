@@ -171,7 +171,7 @@ export class EmailService {
         <p>Your payment for booking ${bookingId} has been ${paymentStatus.toLowerCase()}.</p>
         <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
           <p><strong>Transaction Details:</strong></p>
-          <p>Amount: $${amount}</p>
+          <p>Amount: Ksh${amount}</p>
           <p>Method: ${paymentMethod.replace('_', ' ')}</p>
           <p>Transaction ID: ${transactionId}</p>
         </div>
@@ -197,7 +197,7 @@ export class EmailService {
         <p>You have received an M-PESA payment prompt on your phone number ${phoneNumber}.</p>
         <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
           <p><strong>Payment Details:</strong></p>
-          <p>Amount: $${amount}</p>
+          <p>Amount: Ksh${amount}</p>
           <p>Transaction ID: ${transactionId}</p>
         </div>
         <p>Please complete the payment on your phone to confirm your booking.</p>

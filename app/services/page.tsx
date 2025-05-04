@@ -159,7 +159,7 @@ export default function ServicesPage() {
                 <div className="mt-4 flex items-center justify-between">
                   <div className="text-sm">
                     <span className="text-gray-500">Price range: </span>
-                    <span className="font-medium text-gray-900">${service.price}</span>
+                    <span className="font-medium text-gray-900">Ksh{service.price}</span>
                   </div>
                   <Link
                     href="/login"

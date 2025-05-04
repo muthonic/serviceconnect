@@ -218,7 +218,7 @@ export default function ServicesPage() {
                 <h3 className="text-lg font-semibold text-gray-900">{service.name}</h3>
                 <p className="mt-1 text-sm text-gray-500">{service.description}</p>
                 <div className="mt-2 flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-900">${service.price}</span>
+                  <span className="text-sm font-medium text-gray-900">Ksh{service.price}</span>
                   <span className="text-sm text-gray-500">{service.duration} minutes</span>
                 </div>
                 <div className="mt-4 flex justify-end space-x-2">

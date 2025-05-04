@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Booking, BookingStatus } from '@prisma/client';
 import { toast } from 'react-hot-toast';
-import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaStar, FaCalendar, FaClock, FaDollarSign } from 'react-icons/fa';
+import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaStar, FaCalendar, FaClock } from 'react-icons/fa';
 
 interface BookingWithDetails extends Booking {
   service: {
@@ -190,7 +190,7 @@ export default function CustomerBookings() {
                     <span>{booking.startTime} - {booking.endTime}</span>
                   </div>
                   <div className="flex items-center text-gray-600">
-                    <FaDollarSign className="mr-2" />
+                    <span className="mr-2">Ksh</span>
                     <span>{booking.amount}</span>
                   </div>
                 </div>

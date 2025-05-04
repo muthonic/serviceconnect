@@ -71,7 +71,7 @@ export default function ServiceBooking({ service, onClose }: ServiceBookingProps
         <p className="text-gray-600 mb-4">
           Technician: {service.technician.name}
         </p>
-        <p className="text-gray-600 mb-4">Price: ${service.price}</p>
+        <p className="text-gray-600 mb-4">Price: Ksh{service.price}</p>
         <p className="text-gray-600 mb-4">Duration: {service.duration} minutes</p>
 
         <form onSubmit={handleSubmit}>

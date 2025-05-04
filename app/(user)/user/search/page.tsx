@@ -227,7 +227,7 @@ export default function SearchPage() {
                     </span>
                   </div>
                   <span className="text-lg font-semibold text-gray-900">
-                    ${service.price}
+                    Ksh{service.price}
                   </span>
                 </div>
 

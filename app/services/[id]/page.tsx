@@ -151,7 +151,7 @@ export default function ServicePage({ params }: { params: { id: string } }) {
               </div>
 
               <div className="text-2xl font-bold text-gray-900">
-                ${service.price}
+                Ksh{service.price}
               </div>
             </div>
 

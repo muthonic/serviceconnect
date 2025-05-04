@@ -34,7 +34,7 @@ const mockAppointments: Appointment[] = [
     time: '14:00',
     location: '123 Main St, City, State',
     status: 'confirmed',
-    price: '$150',
+    price: 'Ksh150',
     notes: 'Leaking faucet in kitchen',
   },
   {
@@ -46,7 +46,7 @@ const mockAppointments: Appointment[] = [
     time: '09:00',
     location: '456 Oak Ave, City, State',
     status: 'pending',
-    price: '$5000',
+    price: 'Ksh5000',
     notes: 'Complete bathroom remodel',
   },
 ];

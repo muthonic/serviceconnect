@@ -333,7 +333,7 @@ export default function BookingForm({ service, onClose }: BookingFormProps) {
             <h3 className="text-lg font-medium text-gray-900 mb-2">Price Summary</h3>
             <div className="flex justify-between text-sm">
               <span>Service Price:</span>
-              <span>${service.basePrice}</span>
+              <span>Ksh{service.basePrice}</span>
             </div>
             <div className="flex justify-between text-sm mt-2">
               <span>Duration:</span>
@@ -342,7 +342,7 @@ export default function BookingForm({ service, onClose }: BookingFormProps) {
             <div className="border-t border-gray-200 mt-2 pt-2">
               <div className="flex justify-between font-medium">
                 <span>Total:</span>
-                <span>${service.basePrice}</span>
+                <span>Ksh{service.basePrice}</span>
               </div>
             </div>
           </div>
