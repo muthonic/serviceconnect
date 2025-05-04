@@ -75,14 +75,32 @@ export class EmailService {
   ) {
     console.log(`Sending customer email to: ${to_email}`);
     
+    // Customize the message based on booking status
+    let statusMessage = '';
+    let headerText = '';
+    
+    if (booking_status === 'CONFIRMED') {
+      headerText = 'Booking Confirmed';
+      statusMessage = `Your booking for ${service_name} has been confirmed! The technician will arrive at the scheduled date and time.`;
+    } else if (booking_status === 'CANCELLED') {
+      headerText = 'Booking Cancelled';
+      statusMessage = `Unfortunately, your booking request for ${service_name} could not be accommodated at this time.`;
+    } else if (booking_status === 'COMPLETED') {
+      headerText = 'Service Completed';
+      statusMessage = `Your service booking for ${service_name} has been marked as completed. Thank you for using our service!`;
+    } else {
+      headerText = `Booking ${booking_status}`;
+      statusMessage = `Your booking for ${service_name} has been updated to ${booking_status.toLowerCase()}.`;
+    }
+    
     const templateParams = {
       template_id: process.env.EMAILJS_CUSTOMER_TEMPLATE_ID,
       to_email,
       to_name,
       from_name: 'ServiceConnect',
-      subject: 'Booking Status Update',
-      header: `Booking ${booking_status}`,
-      message: `Your booking for ${service_name} has been ${booking_status.toLowerCase()}.`,
+      subject: `Booking ${booking_status}`,
+      header: headerText,
+      message: statusMessage,
       action_text: 'View Booking Details',
       action_url,
       booking_id,
