@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { EmailService } from '@/lib/email';
 
 // GET /api/technician/bookings
 export async function GET(request: Request) {
@@ -101,14 +102,8 @@ export async function PUT(request: Request) {
       data: { status },
       include: {
         service: true,
-        customer: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-          },
-        },
+        customer: true,
+        technician: true,
         payment: true,
         review: true,
       },
@@ -122,6 +117,28 @@ export async function PUT(request: Request) {
         message: `Your booking for ${booking.service.name} has been ${status.toLowerCase()}.`,
       },
     });
+
+    // Send email to customer about booking status update
+    try {
+      console.log('About to send email with booking status:', updatedBooking.status);
+      console.log('Technician data available:', !!updatedBooking.technician);
+      
+      await EmailService.sendBookingConfirmationToCustomer(
+        updatedBooking.customer.email,
+        updatedBooking.customer.name || '',
+        updatedBooking.service.name,
+        updatedBooking.date,
+        updatedBooking.startTime,
+        updatedBooking.amount,
+        updatedBooking.technician.name,
+        updatedBooking.id,
+        updatedBooking.status,
+        `${process.env.NEXT_PUBLIC_APP_URL}/user/bookings/${updatedBooking.id}`
+      );
+      console.log('Sending status update email to customer:', updatedBooking.customer.email);
+    } catch (emailError) {
+      console.error('Failed to send status update email to customer:', emailError);
+    }
 
     return NextResponse.json(updatedBooking);
   } catch (error) {

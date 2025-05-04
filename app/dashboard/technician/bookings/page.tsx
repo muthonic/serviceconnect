@@ -56,15 +56,21 @@ export default function TechnicianBookings() {
 
   const updateBookingStatus = async (bookingId: string, status: BookingStatus) => {
     try {
-      const response = await fetch(`/api/bookings/${bookingId}`, {
-        method: 'PATCH',
+      console.log(`Updating booking ${bookingId} to status: ${status}`);
+      
+      const response = await fetch('/api/technician/bookings', {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ bookingId, status }),
       });
 
-      if (!response.ok) throw new Error('Failed to update booking status');
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error response:', errorData);
+        throw new Error(errorData.error || 'Failed to update booking status');
+      }
 
       toast.success('Booking status updated successfully');
       fetchBookings();

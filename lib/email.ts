@@ -73,7 +73,7 @@ export class EmailService {
     booking_status: BookingStatus,
     action_url: string
   ) {
-    console.log(`Sending customer email to: ${to_email}`);
+    console.log(`Sending customer email to: ${to_email} with status: ${booking_status}`);
     
     // Customize the message based on booking status
     let statusMessage = '';
@@ -82,15 +82,19 @@ export class EmailService {
     if (booking_status === 'CONFIRMED') {
       headerText = 'Booking Confirmed';
       statusMessage = `Your booking for ${service_name} has been confirmed! The technician will arrive at the scheduled date and time.`;
+      console.log('Using CONFIRMED template');
     } else if (booking_status === 'CANCELLED') {
       headerText = 'Booking Cancelled';
       statusMessage = `Unfortunately, your booking request for ${service_name} could not be accommodated at this time.`;
+      console.log('Using CANCELLED template');
     } else if (booking_status === 'COMPLETED') {
       headerText = 'Service Completed';
       statusMessage = `Your service booking for ${service_name} has been marked as completed. Thank you for using our service!`;
+      console.log('Using COMPLETED template');
     } else {
       headerText = `Booking ${booking_status}`;
       statusMessage = `Your booking for ${service_name} has been updated to ${booking_status.toLowerCase()}.`;
+      console.log('Using default template for status:', booking_status);
     }
     
     const templateParams = {

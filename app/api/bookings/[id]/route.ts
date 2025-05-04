@@ -93,7 +93,8 @@ export async function PATCH(
       data: { status: status as BookingStatus },
       include: {
         service: true,
-        customer: true
+        customer: true,
+        technician: true
       }
     });
 
@@ -108,6 +109,9 @@ export async function PATCH(
 
     // Send email to customer about booking status update
     try {
+      console.log('About to send email with booking status:', updatedBooking.status);
+      console.log('Technician data available:', !!updatedBooking.technician);
+      
       await EmailService.sendBookingConfirmationToCustomer(
         updatedBooking.customer.email,
         updatedBooking.customer.name || '',
