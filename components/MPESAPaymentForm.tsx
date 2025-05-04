@@ -51,7 +51,7 @@ export default function MPESAPaymentForm({ bookingId, amount, onPaymentInitiated
         router.push(`/dashboard/customer/payment-confirmation?checkout_request_id=${checkoutRequestId}&booking_id=${bookingId}`);
       } else {
         // Fallback to bookings page if no checkout request ID
-        router.push('/dashboard/customer/bookings');
+        router.push('/user/bookings');
       }
     } catch (error) {
       console.error('Payment error:', error);

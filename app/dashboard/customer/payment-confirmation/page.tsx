@@ -82,7 +82,7 @@ export default function PaymentConfirmation() {
           <p className="text-gray-600 text-center mb-6">{error}</p>
           <div className="flex justify-center">
             <Link
-              href="/dashboard/customer/bookings"
+              href="/user/bookings"
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
               View My Bookings
@@ -136,7 +136,7 @@ export default function PaymentConfirmation() {
 
         <div className="flex justify-center space-x-4">
           <Link
-            href="/dashboard/customer/bookings"
+            href="/user/bookings"
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             View My Bookings

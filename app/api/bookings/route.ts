@@ -139,15 +139,17 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const role = searchParams.get('role');
     const status = searchParams.get('status');
+    const needsPayment = searchParams.get('needsPayment') === 'true';
 
     console.log('Fetching bookings for:', {
       role,
       status,
+      needsPayment,
       userId: session.user.id,
       userName: session.user.name
     });
 
-    let where = {};
+    let where: any = {};
     
     if (role === 'technician') {
       const technician = await prisma.technician.findUnique({
@@ -166,6 +168,14 @@ export async function GET(req: Request) {
 
     if (status) {
       where = { ...where, status: status as BookingStatus };
+    }
+
+    // If needsPayment is true, add condition to filter bookings without payments
+    if (needsPayment) {
+      where = {
+        ...where,
+        payment: { is: null }  // Bookings with no payment record
+      };
     }
 
     console.log('Query where clause:', where);

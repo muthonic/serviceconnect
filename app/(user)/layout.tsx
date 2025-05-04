@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { FaHome, FaSearch, FaBookmark, FaUser, FaCog, FaBars, FaTimes, FaSignOutAlt, FaInfoCircle, FaQuestionCircle } from 'react-icons/fa';
+import { FaHome, FaSearch, FaBookmark, FaUser, FaCog, FaBars, FaTimes, FaSignOutAlt, FaInfoCircle, FaQuestionCircle, FaCreditCard } from 'react-icons/fa';
 import { signOut, useSession } from 'next-auth/react';
 
 interface NavItem {
@@ -15,6 +15,8 @@ interface NavItem {
 const navigation: NavItem[] = [
   { name: 'Home', href: '/user/search', icon: <FaSearch className="w-5 h-5" /> },
   { name: 'Saved Services', href: '/user/saved-services', icon: <FaBookmark className="w-5 h-5" /> },
+  { name: 'My Bookings', href: '/user/bookings', icon: <FaBookmark className="w-5 h-5" /> },
+  { name: 'Payments', href: '/dashboard/customer/payment', icon: <FaCreditCard className="w-5 h-5" /> },
   { name: 'My Profile', href: '/user/profile', icon: <FaUser className="w-5 h-5" /> },
 ];
 
