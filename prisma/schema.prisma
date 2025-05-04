@@ -64,15 +64,18 @@ model Booking {
 }
 
 model Payment {
-  id            String        @id @default(cuid())
-  bookingId     String        @unique
-  amount        Float
-  method        PaymentMethod
-  status        PaymentStatus @default(PENDING)
-  transactionId String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  booking       Booking       @relation(fields: [bookingId], references: [id])
+  id                 String        @id @default(cuid())
+  bookingId          String        @unique
+  amount             Float
+  method             PaymentMethod
+  status             PaymentStatus @default(PENDING)
+  transactionId      String?       // CheckoutRequestID for M-PESA
+  merchantRequestId  String?       // MerchantRequestID for M-PESA
+  resultCode         String?       // Result code from M-PESA callback
+  resultDescription  String?       // Result description from M-PESA callback
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  booking            Booking       @relation(fields: [bookingId], references: [id])
 }
 
 model Review {

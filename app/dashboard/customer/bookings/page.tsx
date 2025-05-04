@@ -22,6 +22,9 @@ interface BookingWithDetails extends Booking {
     rating: number;
     comment: string;
   };
+  payment?: {
+    status: string;
+  } | null;
 }
 
 export default function CustomerBookings() {
@@ -193,6 +196,27 @@ export default function CustomerBookings() {
                     <span className="mr-2">Ksh</span>
                     <span>{booking.amount}</span>
                   </div>
+                  
+                  {/* Payment Status */}
+                  {booking.payment ? (
+                    <div className="flex items-center mt-2">
+                      <span className={`text-sm font-medium px-2 py-1 rounded ${
+                        booking.payment.status === 'COMPLETED' 
+                          ? 'bg-green-100 text-green-800' 
+                          : booking.payment.status === 'FAILED'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        Payment: {booking.payment.status}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center mt-2">
+                      <span className="text-sm font-medium px-2 py-1 rounded bg-gray-100 text-gray-800">
+                        Payment: Not Paid
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex flex-col gap-2">
@@ -211,6 +235,14 @@ export default function CustomerBookings() {
                     className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                   >
                     Leave Review
+                  </button>
+                )}
+                {(booking.status === 'PENDING' && !booking.payment) && (
+                  <button
+                    onClick={() => window.location.href = `/dashboard/customer/payment?booking_id=${booking.id}`}
+                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                  >
+                    Pay Now
                   </button>
                 )}
                 {booking.status === 'CONFIRMED' && (

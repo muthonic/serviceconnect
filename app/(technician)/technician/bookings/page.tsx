@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Booking, BookingStatus } from '@prisma/client';
 import { toast } from 'react-hot-toast';
-import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaCalendar, FaClock, FaDollarSign } from 'react-icons/fa';
+import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaCalendar, FaClock } from 'react-icons/fa';
 
 interface BookingWithDetails extends Booking {
   service: {
@@ -27,15 +27,18 @@ interface BookingWithDetails extends Booking {
 }
 
 export default function TechnicianBookings() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<BookingWithDetails | null>(null);
   const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
-    fetchBookings();
-  }, []);
+    // Only fetch bookings when session is loaded
+    if (status === 'authenticated') {
+      fetchBookings();
+    }
+  }, [status]);
 
   const fetchBookings = async () => {
     try {
@@ -92,8 +95,21 @@ export default function TechnicianBookings() {
     }
   };
 
-  if (loading) {
+  // Handle loading state
+  if (status === 'loading' || loading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  }
+
+  // If no bookings found
+  if (bookings.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-8">Manage Bookings</h1>
+        <div className="bg-white rounded-lg shadow p-6 text-center">
+          <p className="text-lg text-gray-600">You don't have any bookings yet.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -192,7 +208,7 @@ export default function TechnicianBookings() {
 
       {/* Details Modal */}
       {showDetails && selectedBooking && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-4">
               <h2 className="text-2xl font-bold">Booking Details</h2>
@@ -245,7 +261,53 @@ export default function TechnicianBookings() {
                     <span className="mr-2">Ksh</span>
                     <span>{selectedBooking.amount}</span>
                   </div>
+                  <div className="flex items-center text-gray-600">
+                    <FaMapMarkerAlt className="mr-2" />
+                    <span>{selectedBooking.address || 'No address provided'}</span>
+                  </div>
                 </div>
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => setShowDetails(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  Close
+                </button>
+                {selectedBooking.status === 'PENDING' && (
+                  <>
+                    <button
+                      onClick={() => {
+                        updateBookingStatus(selectedBooking.id, 'CONFIRMED');
+                        setShowDetails(false);
+                      }}
+                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+                    >
+                      Accept Booking
+                    </button>
+                    <button
+                      onClick={() => {
+                        updateBookingStatus(selectedBooking.id, 'CANCELLED');
+                        setShowDetails(false);
+                      }}
+                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+                    >
+                      Reject Booking
+                    </button>
+                  </>
+                )}
+                {selectedBooking.status === 'CONFIRMED' && (
+                  <button
+                    onClick={() => {
+                      updateBookingStatus(selectedBooking.id, 'COMPLETED');
+                      setShowDetails(false);
+                    }}
+                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                  >
+                    Mark as Completed
+                  </button>
+                )}
               </div>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import prisma from './prisma';
 import { EmailService } from './email';
+import { DarajaAPI } from './daraja';
 
 interface PaymentDetails {
   amount: number;
@@ -13,11 +14,23 @@ interface PaymentDetails {
   };
 }
 
+interface STKPushResult {
+  MerchantRequestID: string;
+  CheckoutRequestID: string;
+  ResponseCode: string;
+  ResponseDescription: string;
+  CustomerMessage: string;
+}
+
 export class PaymentService {
   private static validateMPESAPhoneNumber(phoneNumber: string): boolean {
-    // M-PESA phone numbers should be 10 digits starting with 254
-    const phoneRegex = /^254[0-9]{9}$/;
-    return phoneRegex.test(phoneNumber);
+    try {
+      // Just validate if we can format it
+      DarajaAPI.formatPhoneNumber(phoneNumber);
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 
   private static validateCardDetails(cardDetails: { number: string; expiry: string; cvv: string }): boolean {
@@ -45,7 +58,15 @@ export class PaymentService {
         include: { 
           payment: true,
           customer: true,
-          service: true
+          service: {
+            include: {
+              technician: {
+                include: {
+                  user: true
+                }
+              }
+            }
+          }
         },
       });
 
@@ -64,7 +85,7 @@ export class PaymentService {
             throw new Error('Phone number is required for M-PESA payments');
           }
           if (!this.validateMPESAPhoneNumber(details.phoneNumber)) {
-            throw new Error('Invalid M-PESA phone number format. Must be 10 digits starting with 254');
+            throw new Error('Invalid M-PESA phone number format');
           }
           break;
 
@@ -82,13 +103,34 @@ export class PaymentService {
       // Process payment based on method
       let paymentStatus: PaymentStatus = 'PENDING';
       let transactionId: string | null = null;
+      let mpesaRequestId: string | null = null;
 
       switch (method) {
         case 'MPESA':
-          // Here you would integrate with M-PESA API
-          // For now, we'll simulate a successful payment
-          paymentStatus = 'COMPLETED';
-          transactionId = `MPESA_${Date.now()}`;
+          // Integrate with M-PESA API to send STK push
+          try {
+            const accountReference = `SC-${bookingId.slice(0, 8)}`; // Short reference for M-PESA
+            const transactionDesc = `Payment for ${booking.service.name}`;
+            
+            const stkResult = await DarajaAPI.initiateSTKPush(
+              details.phoneNumber!,
+              details.amount,
+              accountReference,
+              transactionDesc
+            );
+            
+            // Save the M-PESA request IDs for future reference
+            transactionId = stkResult.CheckoutRequestID;
+            mpesaRequestId = stkResult.MerchantRequestID;
+            
+            // Payment remains pending until callback is received
+            paymentStatus = 'PENDING';
+            
+            console.log(`STK push sent to ${details.phoneNumber} for booking ${bookingId}`);
+          } catch (error) {
+            console.error('M-PESA payment error:', error);
+            throw new Error(`Failed to process M-PESA payment: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          }
           break;
 
         case 'CREDIT_CARD':
@@ -120,6 +162,7 @@ export class PaymentService {
           method,
           status: paymentStatus,
           transactionId,
+          merchantRequestId: mpesaRequestId,
         },
       });
 
@@ -137,7 +180,7 @@ export class PaymentService {
           booking.customer.email,
           details.phoneNumber,
           details.amount,
-          transactionId
+          transactionId || 'MPESA_PENDING'
         );
       } else {
         await EmailService.sendPaymentNotification(
@@ -145,7 +188,7 @@ export class PaymentService {
           paymentStatus,
           method,
           details.amount,
-          transactionId,
+          transactionId || 'PAYMENT_PENDING',
           bookingId
         );
       }
@@ -158,32 +201,44 @@ export class PaymentService {
   }
 
   static async handleMPESACallback(
-    transactionId: string,
-    status: 'SUCCESS' | 'FAILED'
+    checkoutRequestId: string,
+    resultCode: string,
+    resultDesc: string
   ) {
     try {
+      // Find the payment by transactionId (which is the checkoutRequestId)
       const payment = await prisma.payment.findFirst({
-        where: { transactionId },
+        where: { transactionId: checkoutRequestId },
         include: { 
           booking: {
             include: {
               customer: true,
-              service: true
+              service: {
+                include: {
+                  technician: true
+                }
+              }
             }
           }
         },
       });
 
       if (!payment) {
-        throw new Error('Payment not found');
+        throw new Error(`Payment not found for checkoutRequestId: ${checkoutRequestId}`);
       }
 
-      const newStatus: PaymentStatus = status === 'SUCCESS' ? 'COMPLETED' : 'FAILED';
+      // ResultCode 0 means success in M-PESA
+      const success = resultCode === '0';
+      const newStatus: PaymentStatus = success ? 'COMPLETED' : 'FAILED';
 
       // Update payment status
-      await prisma.payment.update({
+      const updatedPayment = await prisma.payment.update({
         where: { id: payment.id },
-        data: { status: newStatus },
+        data: { 
+          status: newStatus,
+          resultCode: resultCode,
+          resultDescription: resultDesc
+        },
       });
 
       // Update booking status if payment is successful
@@ -200,11 +255,11 @@ export class PaymentService {
         newStatus,
         payment.method,
         payment.amount,
-        transactionId,
+        checkoutRequestId,
         payment.bookingId
       );
 
-      return payment;
+      return updatedPayment;
     } catch (error) {
       console.error('M-PESA callback error:', error);
       throw error;

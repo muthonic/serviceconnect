@@ -5,8 +5,9 @@ import prisma from '@/lib/prisma';
 import { BookingStatus } from '@prisma/client';
 import { EmailService } from '@/lib/email';
 
-export async function PATCH(
-  req: Request,
+// GET a single booking by ID
+export async function GET(
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -15,7 +16,52 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { status } = await req.json();
+    const bookingId = params.id;
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        service: {
+          include: {
+            technician: true
+          }
+        },
+        customer: true,
+        payment: true
+      }
+    });
+
+    if (!booking) {
+      return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+    }
+
+    // Verify the user has permission to view this booking
+    const isCustomer = booking.customerId === session.user.id;
+    const isTechnician = booking.service.technician.userId === session.user.id;
+    const isAdmin = session.user.role === 'ADMIN';
+
+    if (!isCustomer && !isTechnician && !isAdmin) {
+      return NextResponse.json({ error: 'Not authorized to view this booking' }, { status: 403 });
+    }
+
+    return NextResponse.json(booking);
+  } catch (error) {
+    console.error('Error fetching booking:', error);
+    return NextResponse.json({ error: 'Failed to fetch booking' }, { status: 500 });
+  }
+}
+
+// PATCH update a booking's status
+export async function PATCH(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { status } = await request.json();
 
     // Verify the user is a technician
     const technician = await prisma.technician.findUnique({
@@ -26,33 +72,29 @@ export async function PATCH(
       return NextResponse.json({ error: 'Not a technician' }, { status: 403 });
     }
 
-    // Get the booking
+    const bookingId = params.id;
     const booking = await prisma.booking.findUnique({
-      where: { id: params.id },
-      include: { customer: true, service: true },
+      where: { id: bookingId },
+      include: { service: true }
     });
 
     if (!booking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
     }
 
-    // Verify the booking belongs to this technician
+    // Verify the technician is assigned to the booking
     if (booking.technicianId !== technician.id) {
-      return NextResponse.json(
-        { error: 'Not authorized to update this booking' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Not authorized to update this booking' }, { status: 403 });
     }
 
     // Update the booking status
     const updatedBooking = await prisma.booking.update({
-      where: { id: params.id },
-      data: { status },
+      where: { id: bookingId },
+      data: { status: status as BookingStatus },
       include: {
         service: true,
-        technician: true,
-        customer: true,
-      },
+        customer: true
+      }
     });
 
     // Create notification for customer
@@ -86,9 +128,6 @@ export async function PATCH(
     return NextResponse.json(updatedBooking);
   } catch (error) {
     console.error('Error updating booking:', error);
-    return NextResponse.json(
-      { error: 'Failed to update booking' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to update booking' }, { status: 500 });
   }
 } 
