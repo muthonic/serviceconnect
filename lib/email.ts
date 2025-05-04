@@ -1,10 +1,14 @@
-import { PaymentStatus, PaymentMethod } from '@prisma/client';
+import { PaymentStatus, PaymentMethod, BookingStatus } from '@prisma/client';
 import nodemailer from 'nodemailer';
 
 interface EmailOptions {
   to: string;
   subject: string;
   html: string;
+}
+
+interface EmailJSParams {
+  [key: string]: any;
 }
 
 export class EmailService {
@@ -28,6 +32,109 @@ export class EmailService {
       console.error('Email sending error:', error);
       throw error;
     }
+  }
+
+  private static async sendEmailJS(templateParams: EmailJSParams) {
+    try {
+      const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          service_id: process.env.EMAILJS_SERVICE_ID,
+          template_id: templateParams.template_id,
+          user_id: process.env.EMAILJS_PUBLIC_KEY,
+          accessToken: process.env.EMAILJS_PRIVATE_KEY,
+          template_params: templateParams
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`EmailJS responded with ${response.status}: ${await response.text()}`);
+      }
+
+      return await response.text();
+    } catch (error) {
+      console.error('EmailJS sending error:', error);
+      throw error;
+    }
+  }
+
+  static async sendBookingConfirmationToCustomer(
+    to_email: string,
+    to_name: string,
+    service_name: string,
+    date: Date,
+    time: string,
+    amount: number,
+    technician_name: string,
+    booking_id: string,
+    booking_status: BookingStatus,
+    action_url: string
+  ) {
+    console.log(`Sending customer email to: ${to_email}`);
+    
+    const templateParams = {
+      template_id: process.env.EMAILJS_CUSTOMER_TEMPLATE_ID,
+      to_email,
+      to_name,
+      from_name: 'ServiceConnect',
+      subject: 'Booking Status Update',
+      header: `Booking ${booking_status}`,
+      message: `Your booking for ${service_name} has been ${booking_status.toLowerCase()}.`,
+      action_text: 'View Booking Details',
+      action_url,
+      booking_id,
+      service_name,
+      date,
+      time: time || 'N/A',
+      amount,
+      customer_name: to_name,
+      customer_email: to_email,
+      technician_name,
+      booking_status
+    };
+    
+    console.log('Template params:', templateParams);
+    return this.sendEmailJS(templateParams);
+  }
+
+  static async sendBookingNotificationToTechnician(
+    to_email: string,
+    to_name: string,
+    service_name: string,
+    date: Date,
+    time: string,
+    amount: number,
+    customer_name: string,
+    booking_id: string,
+    action_url: string
+  ) {
+    console.log(`Sending technician email to: ${to_email}`);
+    
+    const templateParams = {
+      template_id: process.env.EMAILJS_TECHNICIAN_TEMPLATE_ID,
+      to_email,
+      to_name,
+      from_name: 'ServiceConnect',
+      subject: 'New Booking Request',
+      header: 'New Booking Request',
+      message: `You have a new booking request for ${service_name} on ${date.toDateString()} at ${time || 'a time'}.`,
+      action_text: 'Review Booking',
+      action_url,
+      booking_id,
+      service_name,
+      date,
+      time: time || 'N/A',
+      amount,
+      customer_name,
+      technician_name: to_name,
+      booking_status: 'PENDING'
+    };
+    
+    console.log('Template params:', templateParams);
+    return this.sendEmailJS(templateParams);
   }
 
   static async sendPaymentNotification(

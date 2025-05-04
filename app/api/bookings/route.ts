@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { BookingStatus } from '@prisma/client';
+import { EmailService } from '@/lib/email';
 
 export async function POST(req: Request) {
   try {
@@ -21,6 +22,15 @@ export async function POST(req: Request) {
 
     if (!service) {
       return NextResponse.json({ error: 'Service not found' }, { status: 404 });
+    }
+
+    // Get user information
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email as string },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     // Create the booking
@@ -70,6 +80,43 @@ export async function POST(req: Request) {
         message: `You have a new booking request for ${service.name} from ${session.user.name}`,
       },
     });
+
+    // Send email to customer
+    try {
+      await EmailService.sendBookingConfirmationToCustomer(
+        booking.customer.email,
+        booking.customer.name || '',
+        booking.service.name,
+        booking.date,
+        booking.startTime,
+        booking.amount,
+        booking.technician.name,
+        booking.id,
+        booking.status,
+        `${process.env.NEXT_PUBLIC_APP_URL}/user/bookings/${booking.id}`
+      );
+      console.log('Sending customer email to:', booking.customer.email);
+    } catch (emailError) {
+      console.error('Failed to send customer email:', emailError);
+    }
+
+    // Send email to technician
+    try {
+      await EmailService.sendBookingNotificationToTechnician(
+        booking.technician.email,
+        booking.technician.name,
+        booking.service.name,
+        booking.date,
+        booking.startTime,
+        booking.amount,
+        booking.customer.name || '',
+        booking.id,
+        `${process.env.NEXT_PUBLIC_APP_URL}/technician/bookings/${booking.id}`
+      );
+      console.log('Sending technician email to:', booking.technician.email);
+    } catch (emailError) {
+      console.error('Failed to send technician email:', emailError);
+    }
 
     return NextResponse.json(booking);
   } catch (error) {

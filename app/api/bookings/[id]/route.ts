@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { BookingStatus } from '@prisma/client';
+import { EmailService } from '@/lib/email';
 
 export async function PATCH(
   req: Request,
@@ -62,6 +63,25 @@ export async function PATCH(
         message: `Your booking for ${booking.service.name} has been ${status.toLowerCase()}`,
       },
     });
+
+    // Send email to customer about booking status update
+    try {
+      await EmailService.sendBookingConfirmationToCustomer(
+        updatedBooking.customer.email,
+        updatedBooking.customer.name || '',
+        updatedBooking.service.name,
+        updatedBooking.date,
+        updatedBooking.startTime,
+        updatedBooking.amount,
+        updatedBooking.technician.name,
+        updatedBooking.id,
+        updatedBooking.status,
+        `${process.env.NEXT_PUBLIC_APP_URL}/user/bookings/${updatedBooking.id}`
+      );
+      console.log('Sending status update email to customer:', updatedBooking.customer.email);
+    } catch (emailError) {
+      console.error('Failed to send status update email to customer:', emailError);
+    }
 
     return NextResponse.json(updatedBooking);
   } catch (error) {
