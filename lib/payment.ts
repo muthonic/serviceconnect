@@ -243,10 +243,29 @@ export class PaymentService {
 
       // Update booking status if payment is successful
       if (newStatus === 'COMPLETED') {
-        await prisma.booking.update({
+        const updatedBooking = await prisma.booking.update({
           where: { id: payment.bookingId },
           data: { status: 'CONFIRMED' },
         });
+        
+        // Send booking confirmation email to customer
+        try {
+          await EmailService.sendBookingConfirmationToCustomer(
+            payment.booking.customer.email,
+            payment.booking.customer.name || '',
+            payment.booking.service.name,
+            payment.booking.date,
+            payment.booking.startTime,
+            payment.booking.amount,
+            payment.booking.service.technician.name,
+            payment.booking.id,
+            'CONFIRMED',
+            `${process.env.NEXT_PUBLIC_APP_URL}/user/bookings/${payment.booking.id}`
+          );
+          console.log('Sending booking confirmation email to customer:', payment.booking.customer.email);
+        } catch (emailError) {
+          console.error('Failed to send booking confirmation email:', emailError);
+        }
       }
 
       // Send email notification for status change

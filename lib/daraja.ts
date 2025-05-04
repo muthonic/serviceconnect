@@ -7,7 +7,11 @@ const ENDPOINTS = {
   OAUTH_TOKEN: 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials',
   STK_PUSH: 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
   TRANSACTION_STATUS: 'https://sandbox.safaricom.co.ke/mpesa/transactionstatus/v1/query',
-  CALLBACK_URL: process.env.NEXT_PUBLIC_APP_URL ? `${process.env.NEXT_PUBLIC_APP_URL}/api/mpesa/callback` : 'https://serviceconnect.co.ke/api/mpesa/callback'
+  // For development, you need a publicly accessible URL - use ngrok or similar service
+  // Step 1: Run ngrok http 3000
+  // Step 2: Copy the https URL from ngrok
+  // Step 3: Replace this URL with your ngrok URL + /api/mpesa/callback
+  CALLBACK_URL: process.env.MPESA_CALLBACK_URL || 'https://webhook.site/your-unique-id' 
 };
 
 // Default business shortcode for sandbox
