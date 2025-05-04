@@ -264,7 +264,7 @@ export default function DashboardPage() {
             {stats.upcomingBookings.length > 0 ? (
               stats.upcomingBookings.map((booking) => (
               <Link
-                  href={`/technician/bookings/${booking.id}`} 
+                  href={`/technician/bookings`} 
                   key={booking.id}
                   className="border rounded-lg p-4 hover:bg-gray-50 transition-colors block"
                 >
